@@ -1,0 +1,224 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Importar fuentes de Google */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Font Variables */
+  --font-inter: 'Inter', sans-serif;
+  --font-raleway: 'Raleway', sans-serif;
+  --font-montserrat: 'Montserrat', sans-serif;
+  
+  /* COOLORS Palette */
+  --color-yale-blue: #1B4079;
+  --color-air-force-blue: #4D7C8A;
+  --color-cambridge-blue: #7F9C96;
+  --color-sage-green: #8FAD88;
+  --color-mindaro: #CBDF90;
+  
+  /* Yale Blue variations for almost-white tones */
+  --color-yale-blue-50: #F8FAFC;
+  --color-yale-blue-100: #F1F5F9;
+  --color-yale-blue-200: #E2E8F0;
+  --color-yale-blue-300: #CBD5E1;
+  --color-yale-blue-400: #94A3B8;
+  --color-yale-blue-500: #64748B;
+  --color-yale-blue-600: #475569;
+  --color-yale-blue-700: #334155;
+  --color-yale-blue-800: #1E293B;
+  --color-yale-blue-900: #0F172A;
+  
+  /* Semantic colors */
+  --color-primary: var(--color-yale-blue);
+  --color-primary-light: var(--color-air-force-blue);
+  --color-secondary: var(--color-cambridge-blue);
+  --color-accent: var(--color-sage-green);
+  --color-highlight: var(--color-mindaro);
+  
+  /* Almost-white variations */
+  --color-almost-white: var(--color-yale-blue-50);
+  --color-very-light: var(--color-yale-blue-100);
+  --color-light: var(--color-yale-blue-200);
+  
+  /* Content background */
+  --color-content-bg: #e6f3ff;
+  
+  /* White background for content containers */
+  --color-white: #ffffff;
+}
+
+/* Custom utility classes */
+.bg-yale-blue { background-color: var(--color-yale-blue); }
+.bg-air-force-blue { background-color: var(--color-air-force-blue); }
+.bg-cambridge-blue { background-color: var(--color-cambridge-blue); }
+.bg-sage-green { background-color: var(--color-sage-green); }
+.bg-mindaro { background-color: var(--color-mindaro); }
+
+.text-yale-blue { color: var(--color-yale-blue); }
+.text-air-force-blue { color: var(--color-air-force-blue); }
+.text-cambridge-blue { color: var(--color-cambridge-blue); }
+.text-sage-green { color: var(--color-sage-green); }
+.text-mindaro { color: var(--color-mindaro); }
+
+.border-yale-blue { border-color: var(--color-yale-blue); }
+.border-air-force-blue { border-color: var(--color-air-force-blue); }
+.border-cambridge-blue { border-color: var(--color-cambridge-blue); }
+.border-sage-green { border-color: var(--color-sage-green); }
+.border-mindaro { border-color: var(--color-mindaro); }
+
+/* Almost-white utility classes */
+.bg-almost-white { background-color: var(--color-almost-white); }
+.bg-very-light { background-color: var(--color-very-light); }
+.bg-light { background-color: var(--color-light); }
+
+/* Content background utility class */
+.bg-content-bg { background-color: var(--color-content-bg); }
+
+/* White background utility class */
+.bg-white-custom { background-color: var(--color-white); }
+
+.text-almost-white { color: var(--color-almost-white); }
+.text-very-light { color: var(--color-very-light); }
+.text-light { color: var(--color-light); }
+
+.border-almost-white { border-color: var(--color-almost-white); }
+.border-very-light { border-color: var(--color-very-light); }
+.border-light { border-color: var(--color-light); }
+
+/* Estilos personalizados para tu app de viajes */
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6 border border-gray-200;
+  }
+}
+
+/* TipTap Editor Styles */
+.tiptap-editor .ProseMirror {
+  outline: none;
+  min-height: 200px;
+}
+
+.tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.tiptap-editor .ProseMirror h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin: 0.67em 0;
+}
+
+.tiptap-editor .ProseMirror h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0.75em 0;
+}
+
+.tiptap-editor .ProseMirror h3 {
+  font-size: 1.17em;
+  font-weight: bold;
+  margin: 0.83em 0;
+}
+
+.tiptap-editor .ProseMirror ul,
+.tiptap-editor .ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 1em 0;
+}
+
+.tiptap-editor .ProseMirror li {
+  margin: 0.5em 0;
+}
+
+.tiptap-editor .ProseMirror blockquote {
+  border-left: 3px solid #ddd;
+  margin: 1em 0;
+  padding-left: 1em;
+  font-style: italic;
+}
+
+.tiptap-editor .ProseMirror code {
+  background-color: #f4f4f4;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.tiptap-editor .ProseMirror pre {
+  background-color: #f4f4f4;
+  padding: 1em;
+  border-radius: 5px;
+  overflow-x: auto;
+}
+
+.tiptap-editor .ProseMirror table {
+  border-collapse: collapse;
+  margin: 1em 0;
+  width: 100%;
+}
+
+.tiptap-editor .ProseMirror th,
+.tiptap-editor .ProseMirror td {
+  border: 1px solid #ddd;
+  padding: 0.5em;
+  text-align: left;
+}
+
+.tiptap-editor .ProseMirror th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.tiptap-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  margin: 1em 0;
+}
+
+.tiptap-editor .ProseMirror a {
+  color: #0066cc;
+  text-decoration: underline;
+}
+
+.tiptap-editor .ProseMirror a:hover {
+  color: #004499;
+}
+
+/* Font size styles */
+.tiptap-editor .ProseMirror [style*="font-size: 12px"] {
+  font-size: 12px !important;
+}
+
+.tiptap-editor .ProseMirror [style*="font-size: 14px"] {
+  font-size: 14px !important;
+}
+
+.tiptap-editor .ProseMirror [style*="font-size: 16px"] {
+  font-size: 16px !important;
+}
+
+.tiptap-editor .ProseMirror [style*="font-size: 18px"] {
+  font-size: 18px !important;
+}
+
+.tiptap-editor .ProseMirror [style*="font-size: 20px"] {
+  font-size: 20px !important;
+}
+
+.tiptap-editor .ProseMirror [style*="font-size: 24px"] {
+  font-size: 24px !important;
+}
+
+.tiptap-editor .ProseMirror [style*="font-size: 30px"] {
+  font-size: 30px !important;
+}

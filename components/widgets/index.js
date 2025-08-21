@@ -1,0 +1,6 @@
+export { default as HoraWidget } from './HoraWidget'
+export { default as TituloWidget } from './TituloWidget'
+export { default as DescripcionWidget } from './DescripcionWidget'
+export { default as ColumnasWidget } from './ColumnasWidget'
+export { default as WidgetContainer } from './WidgetContainer'
+export { default as DayDropZone } from './DayDropZone'

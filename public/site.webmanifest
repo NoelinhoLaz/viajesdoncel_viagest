@@ -1,0 +1,16 @@
+{
+  "name": "Viajes Doncel - Gestión Comercial",
+  "short_name": "Viajes Doncel",
+  "description": "Sistema de gestión comercial integral para agencia de viajes",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32 64x64",
+      "type": "image/x-icon"
+    }
+  ],
+  "theme_color": "#0f4c75",
+  "background_color": "#e6f3ff",
+  "display": "standalone",
+  "start_url": "/"
+}
