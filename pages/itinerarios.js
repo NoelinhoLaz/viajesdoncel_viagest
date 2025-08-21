@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import { ArrowLeft, Plus, Search, Filter, Calendar, MapPin, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Edit, Trash2, Eye, Download, Share2, Plane, Bus, Train, Car, Ship } from 'lucide-react'
+import { ArrowLeft, Plus, Search, Filter, Calendar, MapPin, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Edit, Trash2, Eye, Download, Share2, Plane, Bus, Train, Car, Ship, Globe, Lock } from 'lucide-react'
 import Select from 'react-select'
+import { getAllItinerarios, deleteItinerario } from '../lib/supabase/itinerarios'
 
 export default function Itinerarios() {
   const router = useRouter()
@@ -12,91 +13,100 @@ export default function Itinerarios() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
 
-  // Datos de ejemplo
-  const itinerariosData = [
-    {
-      id: 1,
-      nombre: 'Ruta del Vino en La Rioja',
-      destino: 'La Rioja, España',
-      duracion: '3 días',
-      precio: 450,
-      estado: 'Activo',
-      capacidad: 25,
-      proximaSalida: '2024-02-15',
-      transporte: 'Bus',
-      reservas: 18
-    },
-    {
-      id: 2,
-      nombre: 'Costa Brava Completa',
-      destino: 'Girona, España',
-      duracion: '5 días',
-      precio: 780,
-      estado: 'Activo',
-      capacidad: 30,
-      proximaSalida: '2024-02-20',
-      transporte: 'Bus',
-      reservas: 25
-    },
-    {
-      id: 3,
-      nombre: 'Madrid Cultural',
-      destino: 'Madrid, España',
-      duracion: '2 días',
-      precio: 320,
-      estado: 'Borrador',
-      capacidad: 20,
-      proximaSalida: '2024-03-01',
-      transporte: 'Tren',
-      reservas: 0
-    },
-    {
-      id: 4,
-      nombre: 'Barcelona Modernista',
-      destino: 'Barcelona, España',
-      duracion: '4 días',
-      precio: 650,
-      estado: 'Activo',
-      capacidad: 28,
-      proximaSalida: '2024-02-25',
-      transporte: 'Avión',
-      reservas: 22
-    },
-    {
-      id: 5,
-      nombre: 'Andalucía Clásica',
-      destino: 'Sevilla, España',
-      duracion: '6 días',
-      precio: 890,
-      estado: 'Inactivo',
-      capacidad: 35,
-      proximaSalida: '2024-04-10',
-      transporte: 'Bus',
-      reservas: 15
+  // Estado para datos reales
+  const [itinerariosData, setItinerariosData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Cargar itinerarios desde Supabase
+  useEffect(() => {
+    const cargarItinerarios = async () => {
+      try {
+        setLoading(true)
+        const result = await getAllItinerarios()
+        if (result.success) {
+          setItinerariosData(result.data || [])
+        } else {
+          setError(result.error || 'Error al cargar itinerarios')
+        }
+      } catch (error) {
+        setError('Error al conectar con la base de datos')
+        console.error('Error:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
+
+    cargarItinerarios()
+  }, [])
+
+  // Función para eliminar itinerario
+  const handleDeleteItinerario = async (id) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este itinerario?')) {
+      try {
+        const result = await deleteItinerario(id)
+        if (result.success) {
+          // Recargar itinerarios
+          const resultReload = await getAllItinerarios()
+          if (resultReload.success) {
+            setItinerariosData(resultReload.data || [])
+          }
+        } else {
+          alert(`Error al eliminar: ${result.error}`)
+        }
+      } catch (error) {
+        alert('Error al eliminar el itinerario')
+        console.error('Error:', error)
+      }
+    }
+  }
+
+  // Función para ver itinerario
+  const handleViewItinerario = (itinerario) => {
+    if (itinerario.publico && itinerario.url_publica) {
+      window.open(`/${itinerario.url_publica}`, '_blank')
+    } else {
+      alert('Este itinerario no está disponible públicamente')
+    }
+  }
+
+  // Función para editar itinerario
+  const handleEditItinerario = (id) => {
+    router.push(`/itinerario?id=${id}`)
+  }
 
   // Opciones para filtros
   const estadoOptions = [
-    { value: 'activo', label: 'Activo' },
-    { value: 'borrador', label: 'Borrador' },
-    { value: 'inactivo', label: 'Inactivo' }
+    { value: 'publico', label: 'Público' },
+    { value: 'privado', label: 'Privado' }
   ]
 
-  const destinoOptions = [
-    { value: 'la-rioja', label: 'La Rioja, España' },
-    { value: 'girona', label: 'Girona, España' },
-    { value: 'madrid', label: 'Madrid, España' },
-    { value: 'barcelona', label: 'Barcelona, España' },
-    { value: 'sevilla', label: 'Sevilla, España' }
-  ]
+  // Generar opciones de destino dinámicamente
+  const destinoOptions = React.useMemo(() => {
+    const destinosUnicos = [...new Set(itinerariosData.map(item => item.destino))]
+    return destinosUnicos.map(destino => ({
+      value: destino.toLowerCase().replace(/\s+/g, '-'),
+      label: destino
+    }))
+  }, [itinerariosData])
 
-  const duracionOptions = [
-    { value: '1-2', label: '1-2 días' },
-    { value: '3-4', label: '3-4 días' },
-    { value: '5-7', label: '5-7 días' },
-    { value: '8+', label: '8+ días' }
-  ]
+  // Generar opciones de duración dinámicamente
+  const duracionOptions = React.useMemo(() => {
+    const duraciones = itinerariosData.map(item => {
+      const dias = item.dias ? item.dias.length : 0
+      if (dias <= 2) return '1-2'
+      if (dias <= 4) return '3-4'
+      if (dias <= 7) return '5-7'
+      return '8+'
+    })
+    const duracionesUnicas = [...new Set(duraciones)]
+    return duracionesUnicas.map(duracion => ({
+      value: duracion,
+      label: duracion === '1-2' ? '1-2 días' : 
+             duracion === '3-4' ? '3-4 días' : 
+             duracion === '5-7' ? '5-7 días' : '8+ días'
+    }))
+  }, [itinerariosData])
 
   // Estilos para react-select
   const customSelectStyles = {
@@ -121,44 +131,28 @@ export default function Itinerarios() {
     })
   }
 
-  // Funciones helper
-  const getEstadoColor = (estado) => {
-    switch (estado.toLowerCase()) {
-      case 'activo':
-        return 'bg-green-100 text-green-800'
-      case 'borrador':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'inactivo':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
 
-  const getTransporteIcon = (transporte) => {
-    switch (transporte.toLowerCase()) {
-      case 'avión':
-        return <Plane size={16} />
-      case 'bus':
-        return <Bus size={16} />
-      case 'tren':
-        return <Train size={16} />
-      case 'coche':
-        return <Car size={16} />
-      case 'barco':
-        return <Ship size={16} />
-      default:
-        return <Bus size={16} />
-    }
-  }
 
   // Filtrado de datos
   const filteredData = itinerariosData.filter(item => {
-    const matchesSearch = item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.destino.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesEstado = !selectedEstado || item.estado.toLowerCase() === selectedEstado.value
-    const matchesDestino = !selectedDestino || item.destino.toLowerCase().includes(selectedDestino.label.toLowerCase())
-    const matchesDuracion = !selectedDuracion || item.duracion.includes(selectedDuracion.label.split(' ')[0])
+    const matchesSearch = (item.titulo && item.titulo.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (item.destino && item.destino.toLowerCase().includes(searchTerm.toLowerCase()))
+    
+    const matchesEstado = !selectedEstado || 
+                         (selectedEstado.value === 'publico' && item.publico) ||
+                         (selectedEstado.value === 'privado' && !item.publico)
+    
+    const matchesDestino = !selectedDestino || 
+                          (item.destino && item.destino.toLowerCase().includes(selectedDestino.label.toLowerCase()))
+    
+    const matchesDuracion = !selectedDuracion || (() => {
+      const dias = item.dias ? item.dias.length : 0
+      if (selectedDuracion.value === '1-2') return dias <= 2
+      if (selectedDuracion.value === '3-4') return dias > 2 && dias <= 4
+      if (selectedDuracion.value === '5-7') return dias > 4 && dias <= 7
+      if (selectedDuracion.value === '8+') return dias > 7
+      return true
+    })()
 
     return matchesSearch && matchesEstado && matchesDestino && matchesDuracion
   })
@@ -176,9 +170,9 @@ export default function Itinerarios() {
 
   // Estadísticas
   const totalItinerarios = itinerariosData.length
-  const itinerariosActivos = itinerariosData.filter(item => item.estado === 'Activo').length
-  const capacidadTotal = itinerariosData.reduce((sum, item) => sum + item.capacidad, 0)
-  const proximasSalidas = itinerariosData.filter(item => item.estado === 'Activo').length
+  const itinerariosPublicos = itinerariosData.filter(item => item.publico).length
+  const itinerariosPrivados = itinerariosData.filter(item => !item.publico).length
+  const totalDias = itinerariosData.reduce((sum, item) => sum + (item.dias ? item.dias.length : 0), 0)
 
   return (
     <div className="min-h-screen bg-content-bg">
@@ -250,11 +244,11 @@ export default function Itinerarios() {
           <div className="bg-white-custom rounded-lg shadow-md p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+                <Globe className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Destinos Activos</p>
-                <p className="text-2xl font-bold text-gray-900">{itinerariosActivos}</p>
+                <p className="text-sm font-medium text-gray-600">Itinerarios Públicos</p>
+                <p className="text-2xl font-bold text-gray-900">{itinerariosPublicos}</p>
               </div>
             </div>
           </div>
@@ -262,11 +256,11 @@ export default function Itinerarios() {
           <div className="bg-white-custom rounded-lg shadow-md p-6">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <Users className="w-6 h-6 text-purple-600" />
+                <Lock className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Capacidad Total</p>
-                <p className="text-2xl font-bold text-gray-900">{capacidadTotal}</p>
+                <p className="text-sm font-medium text-gray-600">Itinerarios Privados</p>
+                <p className="text-2xl font-bold text-gray-900">{itinerariosPrivados}</p>
               </div>
             </div>
           </div>
@@ -277,12 +271,31 @@ export default function Itinerarios() {
                 <Calendar className="w-6 h-6 text-orange-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Próximas Salidas</p>
-                <p className="text-2xl font-bold text-gray-900">{proximasSalidas}</p>
+                <p className="text-sm font-medium text-gray-600">Total de Días</p>
+                <p className="text-2xl font-bold text-gray-900">{totalDias}</p>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Estado de carga y errores */}
+        {loading && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-blue-800">Cargando itinerarios desde la base de datos...</span>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <span className="ml-3 text-red-800">{error}</span>
+            </div>
+          </div>
+        )}
 
         {/* Filtros y búsqueda */}
         <div className="bg-white-custom rounded-lg shadow-md p-6 mb-6">
@@ -352,16 +365,13 @@ export default function Itinerarios() {
                     Destino
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Duración
+                    Fechas
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Precio
+                    Días
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Transporte
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
@@ -369,49 +379,99 @@ export default function Itinerarios() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {currentData.map((itinerario) => (
-                  <tr key={itinerario.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{itinerario.nombre}</div>
-                        <div className="text-sm text-gray-500">ID: {itinerario.id}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{itinerario.destino}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{itinerario.duracion}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">€{itinerario.precio}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getEstadoColor(itinerario.estado)}`}>
-                        {itinerario.estado}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        {getTransporteIcon(itinerario.transporte)}
-                        <span className="ml-2">{itinerario.transporte}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button className="text-yale-blue hover:text-air-force-blue">
-                          <Eye size={16} />
-                        </button>
-                        <button className="text-green-600 hover:text-green-800">
-                          <Edit size={16} />
-                        </button>
-                        <button className="text-red-600 hover:text-red-800">
-                          <Trash2 size={16} />
-                        </button>
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center">
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yale-blue"></div>
+                        <span className="ml-3 text-gray-600">Cargando itinerarios...</span>
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : error ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center">
+                      <div className="text-red-600">
+                        <AlertCircle className="w-8 h-8 mx-auto mb-2" />
+                        <p>{error}</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : currentData.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center">
+                      <div className="text-gray-500">
+                        <MapPin className="w-8 h-8 mx-auto mb-2" />
+                        <p>No se encontraron itinerarios</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  currentData.map((itinerario) => (
+                    <tr key={itinerario.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{itinerario.titulo || 'Sin título'}</div>
+                          <div className="text-sm text-gray-500">ID: {itinerario.id}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{itinerario.destino || 'Sin destino'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {itinerario.fecha_inicio && itinerario.fecha_fin ? (
+                            <>
+                              <div>{new Date(itinerario.fecha_inicio).toLocaleDateString('es-ES')}</div>
+                              <div className="text-xs text-gray-500">a {new Date(itinerario.fecha_fin).toLocaleDateString('es-ES')}</div>
+                            </>
+                          ) : (
+                            'Sin fechas'
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {itinerario.dias ? itinerario.dias.length : 0} días
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          itinerario.publico 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {itinerario.publico ? 'Público' : 'Privado'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button 
+                            onClick={() => handleViewItinerario(itinerario)}
+                            className="text-yale-blue hover:text-air-force-blue"
+                            title="Ver público"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleEditItinerario(itinerario.id)}
+                            className="text-green-600 hover:text-green-800"
+                            title="Editar"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteItinerario(itinerario.id)}
+                            className="text-red-600 hover:text-red-800"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
